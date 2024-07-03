@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fluffy's Butterfly Chase</title>
+    <title>Pochacco's Animal Rescue</title>
     <style>
         body {
             display: flex;
@@ -19,28 +19,61 @@
             border-radius: 15px;
             box-shadow: 0 0 20px rgba(0,0,0,0.3);
         }
+        #startScreen {
+            position: absolute;
+            background-color: rgba(255,255,255,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        #startButton {
+            font-size: 24px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="startScreen">
+        <h1>Pochacco's Animal Rescue</h1>
+        <p>Oh no! The animals have escaped! Help Pochacco catch 10 rabbits and 10 butterflies in 30 seconds to keep them safe.</p>
+        <p>Use arrow keys to move through the park.</p>
+        <button id="startButton">Start Game</button>
+    </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
+
+        let gameStarted = false;
+        let timeLeft = 30;
+        let rabbitsCount = 0;
+        let butterfliesCount = 0;
 
         // Game objects
-        const fluffy = {
+        const pochacco = {
             x: 400,
-            y: 500,
-            width: 60,
+            y: 300,
+            width: 40,
             height: 40,
             speed: 5
         };
 
+        const rabbits = [];
         const butterflies = [];
 
-        // Game state
-        let score = 0;
-        let timeLeft = 60;
+        // Maze-like obstacles
+        const obstacles = [
+            {x: 100, y: 100, width: 200, height: 50},
+            {x: 500, y: 200, width: 50, height: 200},
+            // Add more obstacles as needed
+        ];
 
         // Key states
         const keys = {};
@@ -54,127 +87,95 @@
             keys[e.code] = false;
         });
 
-        // Game loop
+        startButton.addEventListener('click', startGame);
+
+        function startGame() {
+            gameStarted = true;
+            startScreen.style.display = 'none';
+            // Start background music here
+            gameLoop();
+        }
+
         function gameLoop() {
+            if (!gameStarted) return;
+
             update();
             draw();
-            requestAnimationFrame(gameLoop);
+
+            if (timeLeft > 0 && (rabbitsCount < 10 || butterfliesCount < 10)) {
+                requestAnimationFrame(gameLoop);
+            } else {
+                endGame();
+            }
         }
 
         function update() {
-            // Move Fluffy
-            if (keys['ArrowLeft'] && fluffy.x > 0) fluffy.x -= fluffy.speed;
-            if (keys['ArrowRight'] && fluffy.x < canvas.width - fluffy.width) fluffy.x += fluffy.speed;
-            if (keys['ArrowUp'] && fluffy.y > 0) fluffy.y -= fluffy.speed; // Simple jump for now
+            // Move Pochacco
+            if (keys['ArrowLeft']) pochacco.x -= pochacco.speed;
+            if (keys['ArrowRight']) pochacco.x += pochacco.speed;
+            if (keys['ArrowUp']) pochacco.y -= pochacco.speed;
+            if (keys['ArrowDown']) pochacco.y += pochacco.speed;
 
-            // Update butterflies
-            if (Math.random() < 0.02 && butterflies.length < 10) {
-                butterflies.push({
-                    x: Math.random() * canvas.width,
-                    y: 0,
-                    size: 20 + Math.random() * 10,
-                    speed: 1 + Math.random() * 2,
-                    color: `hsl(${Math.random() * 360}, 100%, 50%)`
-                });
-            }
-
-            butterflies.forEach((butterfly, index) => {
-                butterfly.y += butterfly.speed;
-                if (butterfly.y > canvas.height) {
-                    butterflies.splice(index, 1);
-                }
-                // Simple collision detection
-                if (fluffy.x < butterfly.x + butterfly.size &&
-                    fluffy.x + fluffy.width > butterfly.x &&
-                    fluffy.y < butterfly.y + butterfly.size &&
-                    fluffy.y + fluffy.height > butterfly.y) {
-                    butterflies.splice(index, 1);
-                    score++;
+            // Collision detection with obstacles
+            obstacles.forEach(obstacle => {
+                if (pochacco.x < obstacle.x + obstacle.width &&
+                    pochacco.x + pochacco.width > obstacle.x &&
+                    pochacco.y < obstacle.y + obstacle.height &&
+                    pochacco.y + pochacco.height > obstacle.y) {
+                    // Collision detected, move Pochacco back
+                    if (keys['ArrowLeft']) pochacco.x += pochacco.speed;
+                    if (keys['ArrowRight']) pochacco.x -= pochacco.speed;
+                    if (keys['ArrowUp']) pochacco.y += pochacco.speed;
+                    if (keys['ArrowDown']) pochacco.y -= pochacco.speed;
                 }
             });
 
+            // Update rabbits and butterflies
+            // ... (implement movement and catching logic)
+
             // Update time
-            if (timeLeft > 0) {
-                timeLeft -= 1/60; // Assuming 60 FPS
-            }
+            timeLeft -= 1/60; // Assuming 60 FPS
         }
 
         function draw() {
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw sky
-            ctx.fillStyle = '#87CEEB';
+            // Draw park background
+            ctx.fillStyle = '#90EE90';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw sun
-            ctx.fillStyle = 'yellow';
-            ctx.beginPath();
-            ctx.arc(50, 50, 30, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Draw grass
-            ctx.fillStyle = '#4CAF50';
-            ctx.fillRect(0, 500, canvas.width, 100);
-
-            // Draw flowers
-            for (let i = 0; i < 10; i++) {
-                drawFlower(Math.random() * canvas.width, 520 + Math.random() * 60);
-            }
-
-            // Draw Fluffy
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.ellipse(fluffy.x + fluffy.width/2, fluffy.y + fluffy.height/2, fluffy.width/2, fluffy.height/2, 0, 0, Math.PI * 2);
-            ctx.fill();
-            // Fluffy's face
-            ctx.fillStyle = 'black';
-            ctx.beginPath();
-            ctx.arc(fluffy.x + fluffy.width * 0.7, fluffy.y + fluffy.height * 0.3, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(fluffy.x + fluffy.width * 0.8, fluffy.y + fluffy.height * 0.3, 3, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Draw butterflies
-            butterflies.forEach(butterfly => {
-                drawButterfly(butterfly.x, butterfly.y, butterfly.size, butterfly.color);
+            // Draw obstacles
+            ctx.fillStyle = '#8B4513';
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
             });
+
+            // Draw Pochacco
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(pochacco.x, pochacco.y, pochacco.width, pochacco.height);
+
+            // Draw rabbits and butterflies
+            // ... (implement drawing logic)
 
             // Draw score and time
             ctx.fillStyle = 'black';
             ctx.font = 'bold 24px Arial';
-            ctx.fillText(`Score: ${score}`, 10, 30);
+            ctx.fillText(`Rabbits: ${rabbitsCount}/10  Butterflies: ${butterfliesCount}/10`, 10, 30);
             ctx.fillText(`Time: ${Math.ceil(timeLeft)}`, canvas.width - 120, 30);
         }
 
-        function drawFlower(x, y) {
-            ctx.fillStyle = 'yellow';
-            ctx.beginPath();
-            ctx.arc(x, y, 5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = 'pink';
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.ellipse(x + Math.cos(i * Math.PI * 2/5) * 10, 
-                            y + Math.sin(i * Math.PI * 2/5) * 10, 
-                            7, 3, i * Math.PI * 2/5, 0, Math.PI * 2);
-                ctx.fill();
-            }
+        function endGame() {
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 48px Arial';
+            ctx.fillText('Game Over!', canvas.width/2 - 100, canvas.height/2);
+            // Display final score and restart button
         }
 
-        function drawButterfly(x, y, size, color) {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.ellipse(x, y, size/2, size/4, Math.PI/4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(x, y, size/2, size/4, -Math.PI/4, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Start the game
-        gameLoop();
+        // Initial draw of start screen
+        draw();
     </script>
 </body>
 </html>
