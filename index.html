@@ -184,7 +184,7 @@
                 if (butterfly.y > canvas.height) {
                     butterflies.splice(index, 1);
                 }
-                // 简单的碰撞检测
+                // 碰撞检测
                 if (pochacco.x < butterfly.x + butterfly.size &&
                     pochacco.x + pochacco.width > butterfly.x &&
                     pochacco.y < butterfly.y + butterfly.size &&
@@ -199,7 +199,7 @@
                 if (rabbit.x > canvas.width || rabbit.x < 0) {
                     rabbit.speed = -rabbit.speed;
                 }
-                // 简单的碰撞检测
+                // 碰撞检测
                 if (pochacco.x < rabbit.x + rabbit.size &&
                     pochacco.x + pochacco.width > rabbit.x &&
                     pochacco.y < rabbit.y + rabbit.size &&
@@ -216,7 +216,7 @@
         }
 
         function draw() {
-            // 清空画布
+            // 清除画布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // 画天空
@@ -264,9 +264,13 @@
             ctx.arc(x, y, 5, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = 'pink';
-            ctx.beginPath();
-            ctx.arc(x + 10, y - 10, 5, 0, Math.PI * 2);
-            ctx.fill();
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.ellipse(x + Math.cos(i * Math.PI * 2 / 5) * 10,
+                    y + Math.sin(i * Math.PI * 2 / 5) * 10,
+                    7, 3, i * Math.PI * 2 / 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
         function drawButterfly(x, y, size, color) {
