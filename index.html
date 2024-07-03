@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pochacco 的动物救援</title>
+    <title>Pochacco的动物救援</title>
     <style>
         body {
             display: flex;
@@ -45,10 +45,6 @@
             align-items: center;
             text-align: center;
         }
-        #endScreen h2 {
-            font-size: 24px;
-            color: #4CAF50;
-        }
         #endScreen button {
             margin-top: 20px;
             padding: 10px 20px;
@@ -66,25 +62,24 @@
 </head>
 <body>
     <div id="startScreen">
-        <h1>Pochacco 的动物救援</h1>
-        <p>哦不，我的动物们逃跑了！<br>
-        在 30 秒内抓住 10 只兔子和 10 只蝴蝶来保护它们。</p>
+        <h1>Pochacco的动物救援</h1>
+        <p>哦不，我的动物们逃跑了！<br>在 30 秒内抓住 10 只兔子和 10 只蝴蝶来保护它们。</p>
         <button onclick="startGame()">开始游戏</button>
     </div>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div id="endScreen">
-        <h2 id="endMessage"></h2>
-        <button onclick="restartGame()">再玩一次</button>
-    </div>
     <audio id="backgroundMusic" loop>
         <source src="https://github.com/yourusername/your-repo/raw/main/background_music.mp3" type="audio/mpeg">
     </audio>
+    <div id="endScreen">
+        <h1>游戏结束</h1>
+        <p>你的得分是: <span id="finalScore">0</span></p>
+        <button onclick="restartGame()">重新开始游戏</button>
+    </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const startScreen = document.getElementById('startScreen');
         const endScreen = document.getElementById('endScreen');
-        const endMessage = document.getElementById('endMessage');
         const backgroundMusic = document.getElementById('backgroundMusic');
 
         // 游戏对象
@@ -96,7 +91,7 @@
             speed: 5,
             img: new Image()
         };
-        pochacco.img.src = 'https://github.com/yourusername/your-repo/raw/main/pochacco.png'; // 更新为实际的图片链接
+        pochacco.img.src = 'https://github.com/yourusername/your-repo/raw/main/pochacco.png'; // 更新为实际路径
 
         const rabbits = [];
         const butterflies = [];
@@ -108,7 +103,7 @@
         // 按键状态
         const keys = {};
 
-        // 事件监听器
+        // 事件监听
         document.addEventListener('keydown', (e) => {
             keys[e.code] = true;
         });
@@ -119,28 +114,29 @@
 
         function startGame() {
             startScreen.style.display = 'none';
-            canvas.style.display = 'block';
             endScreen.style.display = 'none';
-            score = 0;
-            timeLeft = 30;
-            rabbits.length = 0;
-            butterflies.length = 0;
+            canvas.style.display = 'block';
             backgroundMusic.play();
             gameLoop();
         }
 
         function restartGame() {
+            score = 0;
+            timeLeft = 30;
+            rabbits.length = 0;
+            butterflies.length = 0;
+            pochacco.x = 400;
+            pochacco.y = 500;
             startGame();
         }
 
         function endGame() {
             backgroundMusic.pause();
-            endScreen.style.display = 'flex';
+            document.getElementById('finalScore').textContent = score;
             canvas.style.display = 'none';
-            endMessage.textContent = `时间到！你的得分是：${score}`;
+            endScreen.style.display = 'flex';
         }
 
-        // 游戏循环
         function gameLoop() {
             update();
             draw();
@@ -276,19 +272,22 @@
         function drawButterfly(x, y, size, color) {
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.ellipse(x, y, size / 2, size / 4, Math.PI / 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x, y, size / 2, size / 4, -Math.PI / 4, 0, Math.PI * 2);
             ctx.fill();
         }
 
         function drawRabbit(x, y, size) {
             ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.ellipse(x, y, size / 2, size / 4, Math.PI / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x, y, size / 2, size / 4, -Math.PI / 2, 0, Math.PI * 2);
             ctx.fill();
         }
-
-        // 让游戏在页面加载时就准备好
-        startGame();
     </script>
 </body>
 </html>
