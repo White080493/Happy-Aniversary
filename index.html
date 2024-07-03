@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pochacco's Animal Rescue</title>
+    <title>Pochacco 的动物救援</title>
     <style>
         body {
             display: flex;
@@ -39,27 +39,55 @@
         #startScreen button:hover {
             background-color: #45a049;
         }
+        #endScreen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        #endScreen h2 {
+            font-size: 24px;
+            color: #4CAF50;
+        }
+        #endScreen button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        #endScreen button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
     <div id="startScreen">
-        <h1>Pochacco's Animal Rescue</h1>
-        <p>Oh no, my animals have escaped!<br>
-        Catch 10 rabbits and 10 butterflies within 30 seconds to protect them.</p>
-        <button onclick="startGame()">Start Game</button>
+        <h1>Pochacco 的动物救援</h1>
+        <p>哦不，我的动物们逃跑了！<br>
+        在 30 秒内抓住 10 只兔子和 10 只蝴蝶来保护它们。</p>
+        <button onclick="startGame()">开始游戏</button>
     </div>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="endScreen">
+        <h2 id="endMessage"></h2>
+        <button onclick="restartGame()">再玩一次</button>
+    </div>
     <audio id="backgroundMusic" loop>
-        <source src="background_music.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
+        <source src="https://github.com/yourusername/your-repo/raw/main/background_music.mp3" type="audio/mpeg">
     </audio>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const startScreen = document.getElementById('startScreen');
+        const endScreen = document.getElementById('endScreen');
+        const endMessage = document.getElementById('endMessage');
         const backgroundMusic = document.getElementById('backgroundMusic');
 
-        // Game objects
+        // 游戏对象
         const pochacco = {
             x: 400,
             y: 500,
@@ -68,28 +96,19 @@
             speed: 5,
             img: new Image()
         };
-        pochacco.img.src = 'pochacco.png';
+        pochacco.img.src = 'https://github.com/yourusername/your-repo/raw/main/pochacco.png'; // 更新为实际的图片链接
 
         const rabbits = [];
         const butterflies = [];
 
-        // Obstacles
-        const obstacles = [
-            {x: 100, y: 100, width: 200, height: 50},
-            {x: 500, y: 200, width: 50, height: 200},
-            // Add more obstacles as needed
-        ];
-
-        // Game state
-        let rabbitsCaught = 0;
-        let butterfliesCaught = 0;
+        // 游戏状态
+        let score = 0;
         let timeLeft = 30;
-        let gameRunning = false;
 
-        // Key states
+        // 按键状态
         const keys = {};
 
-        // Event listeners
+        // 事件监听器
         document.addEventListener('keydown', (e) => {
             keys[e.code] = true;
         });
@@ -101,16 +120,31 @@
         function startGame() {
             startScreen.style.display = 'none';
             canvas.style.display = 'block';
+            endScreen.style.display = 'none';
+            score = 0;
+            timeLeft = 30;
+            rabbits.length = 0;
+            butterflies.length = 0;
             backgroundMusic.play();
-            gameRunning = true;
             gameLoop();
         }
 
+        function restartGame() {
+            startGame();
+        }
+
+        function endGame() {
+            backgroundMusic.pause();
+            endScreen.style.display = 'flex';
+            canvas.style.display = 'none';
+            endMessage.textContent = `时间到！你的得分是：${score}`;
+        }
+
+        // 游戏循环
         function gameLoop() {
-            if (!gameRunning) return;
             update();
             draw();
-            if (timeLeft > 0 && (rabbitsCaught < 10 || butterfliesCaught < 10)) {
+            if (timeLeft > 0) {
                 requestAnimationFrame(gameLoop);
             } else {
                 endGame();
@@ -118,27 +152,13 @@
         }
 
         function update() {
-            // Move Pochacco
+            // 移动 Pochacco
             if (keys['ArrowLeft'] && pochacco.x > 0) pochacco.x -= pochacco.speed;
             if (keys['ArrowRight'] && pochacco.x < canvas.width - pochacco.width) pochacco.x += pochacco.speed;
             if (keys['ArrowUp'] && pochacco.y > 0) pochacco.y -= pochacco.speed;
             if (keys['ArrowDown'] && pochacco.y < canvas.height - pochacco.height) pochacco.y += pochacco.speed;
 
-            // Collision with obstacles
-            obstacles.forEach(obstacle => {
-                if (pochacco.x < obstacle.x + obstacle.width &&
-                    pochacco.x + pochacco.width > obstacle.x &&
-                    pochacco.y < obstacle.y + obstacle.height &&
-                    pochacco.y + pochacco.height > obstacle.y) {
-                    // Collision detected, move Pochacco back
-                    if (keys['ArrowLeft']) pochacco.x += pochacco.speed;
-                    if (keys['ArrowRight']) pochacco.x -= pochacco.speed;
-                    if (keys['ArrowUp']) pochacco.y += pochacco.speed;
-                    if (keys['ArrowDown']) pochacco.y -= pochacco.speed;
-                }
-            });
-
-            // Update butterflies
+            // 更新蝴蝶
             if (Math.random() < 0.02 && butterflies.length < 10) {
                 butterflies.push({
                     x: Math.random() * canvas.width,
@@ -149,7 +169,7 @@
                 });
             }
 
-            // Update rabbits
+            // 更新兔子
             if (Math.random() < 0.02 && rabbits.length < 10) {
                 rabbits.push({
                     x: Math.random() * canvas.width,
@@ -164,13 +184,13 @@
                 if (butterfly.y > canvas.height) {
                     butterflies.splice(index, 1);
                 }
-                // Collision detection
+                // 简单的碰撞检测
                 if (pochacco.x < butterfly.x + butterfly.size &&
                     pochacco.x + pochacco.width > butterfly.x &&
                     pochacco.y < butterfly.y + butterfly.size &&
                     pochacco.y + pochacco.height > butterfly.y) {
                     butterflies.splice(index, 1);
-                    butterfliesCaught++;
+                    score++;
                 }
             });
 
@@ -179,69 +199,63 @@
                 if (rabbit.x > canvas.width || rabbit.x < 0) {
                     rabbit.speed = -rabbit.speed;
                 }
-                // Collision detection
+                // 简单的碰撞检测
                 if (pochacco.x < rabbit.x + rabbit.size &&
                     pochacco.x + pochacco.width > rabbit.x &&
                     pochacco.y < rabbit.y + rabbit.size &&
                     pochacco.y + pochacco.height > rabbit.y) {
                     rabbits.splice(index, 1);
-                    rabbitsCaught++;
+                    score++;
                 }
             });
 
-            // Update time
+            // 更新时间
             if (timeLeft > 0) {
-                timeLeft -= 1 / 60; // Assuming 60 FPS
+                timeLeft -= 1 / 60; // 假设 60 FPS
             }
         }
 
         function draw() {
-            // Clear canvas
+            // 清空画布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw sky
+            // 画天空
             ctx.fillStyle = '#87CEEB';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw sun
+            // 画太阳
             ctx.fillStyle = 'yellow';
             ctx.beginPath();
             ctx.arc(50, 50, 30, 0, Math.PI * 2);
             ctx.fill();
 
-            // Draw grass
+            // 画草地
             ctx.fillStyle = '#4CAF50';
             ctx.fillRect(0, 500, canvas.width, 100);
 
-            // Draw obstacles
-            ctx.fillStyle = '#8B4513';
-            obstacles.forEach(obstacle => {
-                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-            });
-
-            // Draw flowers
+            // 画花朵
             for (let i = 0; i < 10; i++) {
                 drawFlower(Math.random() * canvas.width, 520 + Math.random() * 60);
             }
 
-            // Draw Pochacco
+            // 画 Pochacco
             ctx.drawImage(pochacco.img, pochacco.x, pochacco.y, pochacco.width, pochacco.height);
 
-            // Draw butterflies
+            // 画蝴蝶
             butterflies.forEach(butterfly => {
                 drawButterfly(butterfly.x, butterfly.y, butterfly.size, butterfly.color);
             });
 
-            // Draw rabbits
+            // 画兔子
             rabbits.forEach(rabbit => {
                 drawRabbit(rabbit.x, rabbit.y, rabbit.size);
             });
 
-            // Draw score and time
+            // 画得分和时间
             ctx.fillStyle = 'black';
             ctx.font = 'bold 24px Arial';
-            ctx.fillText(`Rabbits: ${rabbitsCaught}/10  Butterflies: ${butterfliesCaught}/10`, 10, 30);
-            ctx.fillText(`Time: ${Math.ceil(timeLeft)}`, canvas.width - 120, 30);
+            ctx.fillText(`得分: ${score}`, 10, 30);
+            ctx.fillText(`时间: ${Math.ceil(timeLeft)}`, canvas.width - 120, 30);
         }
 
         function drawFlower(x, y) {
@@ -250,51 +264,27 @@
             ctx.arc(x, y, 5, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = 'pink';
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.ellipse(x + Math.cos(i * Math.PI * 2 / 5) * 10,
-                    y + Math.sin(i * Math.PI * 2 / 5) * 10,
-                    7, 3, i * Math.PI * 2 / 5, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            ctx.beginPath();
+            ctx.arc(x + 10, y - 10, 5, 0, Math.PI * 2);
+            ctx.fill();
         }
 
         function drawButterfly(x, y, size, color) {
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.ellipse(x, y, size / 2, size / 4, Math.PI / 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(x, y, size / 2, size / 4, -Math.PI / 4, 0, Math.PI * 2);
+            ctx.arc(x, y, size, 0, Math.PI * 2);
             ctx.fill();
         }
 
         function drawRabbit(x, y, size) {
             ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.ellipse(x, y, size / 2, size / 4, Math.PI / 2, 0, Math.PI * 2);
+            ctx.arc(x, y, size, 0, Math.PI * 2);
             ctx.fill();
-            // Add more details to make the rabbit look cuter
         }
 
-        function endGame() {
-            gameRunning = false;
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 48px Arial';
-            ctx.fillText('Game Over!', canvas.width/2 - 100, canvas.height/2 - 50);
-            ctx.font = 'bold 24px Arial';
-            ctx.fillText(`Rabbits caught: ${rabbitsCaught}/10`, canvas.width/2 - 100, canvas.height/2 + 10);
-            ctx.fillText(`Butterflies caught: ${butterfliesCaught}/10`, canvas.width/2 - 100, canvas.height/2 + 40);
-            ctx.fillText(`Total score: ${rabbitsCaught + butterfliesCaught}`, canvas.width/2 - 100, canvas.height/2 + 70);
-        }
-
-        // Load Pochacco image before starting the game
-        pochacco.img.onload = function() {
-            // Image loaded, game can start
-            startScreen.style.display = 'flex';
-        };
+        // 让游戏在页面加载时就准备好
+        startGame();
     </script>
 </body>
 </html>
